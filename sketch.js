@@ -2,6 +2,10 @@ var knight, run, jump, hurt
 var bg1,bg2;
 
 //music ->bg, coolect coin, articats,banana,jump,hurt
+var score = 0
+var hp = 100
+
+
 
 function preload(){
   run= loadAnimation("Assets/PC/run1.png","Assets/PC/run2.png","Assets/PC/run3.png","Assets/PC/run4.png","Assets/PC/run5.png","Assets/PC/run6.png","Assets/PC/run7.png","Assets/PC/run8.png")
@@ -39,14 +43,20 @@ function setup() {
   //make ground
   ground = createSprite(width/2,height-50, width, 20)
 
+  invisiblePadsGroup = createGroup()
   bananasGroup = createGroup()
   coinsGroup = createGroup()
   padsGroup= createGroup()
+  thornPadGroup=createGroup()
 }
 
 function draw() {
   background(bg2);  
   drawSprites();
+  textSize(30)
+  fill("black")
+  text("Score = "+score, 50,20)
+  text("HP = "+hp, 50,55)
   //write code to make the knight jum and collide with ground and add gravity to knight
   knight.collide(ground)
   if(keyDown("space")){
@@ -58,12 +68,47 @@ function draw() {
   spawnCoins()
   spawnPads()
 
-//if knight is touching banana, score should increse by 1
+  //if knight is touching banana, score should increse by 1
+  if(knight.isTouching(bananasGroup)){
+    score+=1
+    for(var i = 0; i<bananasGroup.length;i++){
+    bananasGroup.get(i).destroy();
+    hp+=10
+    console.log("HP = "+hp)
+    }
+  }
+  if(knight.x>width-11){
+    knight.x=width-11
+  }
+  //if knight is touching pad, then Knight should jump on pad
+  if(knight.isTouching(padsGroup)){ 
+    //for(var i = 0; i<padsGroup.length;i++){
+      knight.x = padsGroup
+      knight.collide(invisiblePadsGroup)
+    //}
+  }
 
+
+  //add code here
+  for (var i=0;i<thornPadGroup.length;i++){
+    if(thornPadGroup.get(i).isTouching(knight)){
+      hp-=10
+      console.log("HP = "+hp)
+    }
+  }
+  
+  if(knight.isTouching(coinsGroup)){
+    score+=8
+    console.log("score = "+score)
+  }
+  
+  
 }
 
-//function to spawn bananas
 
+
+
+//function to spawn bananas
 function spawnbananas() {
   //write code here to spawn the bananas
   if (frameCount % 60 === 0) {
@@ -72,14 +117,7 @@ function spawnbananas() {
     banana.addImage(bananaImage);
     banana.scale = 0.25;
     banana.velocityX = -3;
-    
-     //assign lifetime to the variable
-    banana.lifetime = 200;
-    
-    //adjust the depth
-  //  banana.depth = trex.depth;
-  //  trex.depth = trex.depth + 1;
-    
+    banana.lifetime = 500;    
     //add each banana to the group
     bananasGroup.add(banana);
   }
@@ -87,7 +125,6 @@ function spawnbananas() {
 }
 
 //function to spawn coins
-
 function spawnCoins() {
   //write code here to spawn the clouds
   if (frameCount % 240 === 0) {
@@ -96,42 +133,48 @@ function spawnCoins() {
     coins.addImage(coin);
     coins.scale = 0.2;
     coins.velocityX = -3;
-    
-     //assign lifetime to the variable
-    coins.lifetime = 200;
-    
-    //adjust the depth
-   // coins.depth = trex.depth;
-   // trex.depth = trex.depth + 1;
-    
+    coins.lifetime = 550;
     //add each coins to the group
     coinsGroup.add(coins);
-  }
-  
+  }  
+
+
+
 }
 
 //function to spawn pads
-
 function spawnPads(){
-
   if(frameCount % 80 ===0){
-
     var r = Math.round(random(1,2))
     var pads = createSprite(width,120,40,10);
     pads.y = Math.round(random(height-400,height-200));
+    var invisiblePad = createSprite(pads.x,pads.y-50,pads.width*8,10)
+    pads.lifetime=500
+    pads.velocityX=-4
+    invisiblePad.velocityX=pads.velocityX
+    invisiblePad.lifetime=pads.lifetime
+    pads.scale=0.3
+    pads.debug=true
+    
     switch(r){
       case 1 : pads.addImage(Pad1)
-      break
+      padsGroup.add(pads)
+      break;
       case 2 : pads.addImage(Pad2)
-      break
-      
+      thornPadGroup.add(pads)
+      break;   
     }
-    pads.lifetime=300
-    pads.velocityX=-4
-    pads.scale=0.3
-    padsGroup.add(pads)
-
-
+    invisiblePadsGroup.add(invisiblePad)
   }
-
 }
+
+
+
+
+
+
+
+//music ->bg, coolect coin, articats,banana,jump,hurt
+// write a code to increase coins if knight touches coins
+//var hp =100
+//if knight touches the spike pad hp should decrease hp-=10.
