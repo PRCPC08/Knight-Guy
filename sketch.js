@@ -5,8 +5,6 @@ var bg1,bg2;
 var score = 0
 var hp = 100
 
-
-
 function preload(){
   run= loadAnimation("Assets/PC/run1.png","Assets/PC/run2.png","Assets/PC/run3.png","Assets/PC/run4.png","Assets/PC/run5.png","Assets/PC/run6.png","Assets/PC/run7.png","Assets/PC/run8.png")
   jump= loadAnimation("Assets/PC/jump1.png","Assets/PC/jump2.png","Assets/PC/jump3.png","Assets/PC/jump4.png")
@@ -23,12 +21,10 @@ function preload(){
   bananaImage=loadImage("Assets/NPC/Prop_2.png")
   pinecorn=loadImage("Assets/NPC/Prop_3.png")
   log=loadImage("Assets/NPC/Prop_4.png")
-  jewel=loadImage("Assets/NPC/Prop_7.png")
+  jewelImage=loadImage("Assets/NPC/Prop_7.png")
   brick=loadImage("Assets/NPC/Prop_8.png")
   
-
 }
-
 
 
 function setup() {
@@ -41,14 +37,19 @@ function setup() {
   knight.setCollider("circle",-25,25,25)
 
   //make ground
-  ground = createSprite(width/2,height-50, width, 20)
-
+  ground = createSprite(width/2,height-50, width*2, 20)
   invisiblePadsGroup = createGroup()
   bananasGroup = createGroup()
   coinsGroup = createGroup()
   padsGroup= createGroup()
   thornPadGroup=createGroup()
+  pads2Group= createGroup()
+  jewelGroup=createGroup()
+  obstacesGroup = createGroup()
+
+  createEdgeSprites()
 }
+
 
 function draw() {
   background(bg2);  
@@ -63,7 +64,8 @@ function draw() {
     knight.velocityY=-10
   } 
   knight.velocityY+=0.5
-  //add code to make story screen rules screen play screen 
+  knight.bounceOff(edges)
+  
   spawnbananas()
   spawnCoins()
   spawnPads()
@@ -80,37 +82,40 @@ function draw() {
   if(knight.x>width-11){
     knight.x=width-11
   }
+  if(knight.x<=20){
+    knight.x=30
+    knight.y=height-100
+  }
+  if(keyDown("left")){
+    knight.x -=10
+  }
+  if(keyDown("right")){
+    knight.x +=10
+  }
   //if knight is touching pad, then Knight should jump on pad
   if(knight.isTouching(padsGroup)){ 
     //for(var i = 0; i<padsGroup.length;i++){
-      knight.x = padsGroup
+      knight.x = padsGroup.get(0).x
       knight.collide(invisiblePadsGroup)
     //}
   }
-
-
-  //add code here
   for (var i=0;i<thornPadGroup.length;i++){
     if(thornPadGroup.get(i).isTouching(knight)){
       hp-=10
       console.log("HP = "+hp)
+      thornPadGroup.get(i).destroy();
     }
   }
-  
   if(knight.isTouching(coinsGroup)){
-    score+=8
+    score+=5
     console.log("score = "+score)
   }
-  
   
 }
 
 
-
-
 //function to spawn bananas
 function spawnbananas() {
-  //write code here to spawn the bananas
   if (frameCount % 60 === 0) {
     var banana = createSprite(width,120,40,10);
     banana.y = Math.round(random(height-400,height-300));
@@ -118,15 +123,12 @@ function spawnbananas() {
     banana.scale = 0.25;
     banana.velocityX = -3;
     banana.lifetime = 500;    
-    //add each banana to the group
     bananasGroup.add(banana);
-  }
-  
+  } 
 }
 
 //function to spawn coins
 function spawnCoins() {
-  //write code here to spawn the clouds
   if (frameCount % 240 === 0) {
     var coins = createSprite(width,120,40,10);
     coins.y = Math.round(random(height-400,height-300));
@@ -134,47 +136,79 @@ function spawnCoins() {
     coins.scale = 0.2;
     coins.velocityX = -3;
     coins.lifetime = 550;
-    //add each coins to the group
     coinsGroup.add(coins);
   }  
-
-
-
 }
 
 //function to spawn pads
 function spawnPads(){
-  if(frameCount % 80 ===0){
+  if(frameCount % 200 ===0){
     var r = Math.round(random(1,2))
     var pads = createSprite(width,120,40,10);
-    pads.y = Math.round(random(height-400,height-200));
     var invisiblePad = createSprite(pads.x,pads.y-50,pads.width*8,10)
+    var pads2 = createSprite(pads.x,pads.y,pads.width,pads.height)
+
+    pads.y = Math.round(random(height-400,height-200));
     pads.lifetime=500
     pads.velocityX=-4
-    invisiblePad.velocityX=pads.velocityX
-    invisiblePad.lifetime=pads.lifetime
     pads.scale=0.3
     pads.debug=true
-    
+    invisiblePad.velocityX=pads.velocityX
+    invisiblePad.lifetime=pads.lifetime
+    pads2.velocityX = pads.velocityX
+    pads2.scale=0.3
+    pads2.lifetime=pads.lifetime
     switch(r){
       case 1 : pads.addImage(Pad1)
+      pads2.addImage(Pad1)
       padsGroup.add(pads)
       break;
       case 2 : pads.addImage(Pad2)
+      pads2.addImage(Pad2)
       thornPadGroup.add(pads)
       break;   
     }
+    pads2Group.add(pads2)
     invisiblePadsGroup.add(invisiblePad)
   }
 }
+//function to Artifact
+function spawnArtifact() {
+  if (frameCount % 240 === 0) {
+    var jewel = createSprite(width,120,40,10);
+    jewel.y = Math.round(random(height-400,height-300));
+    jewel.addImage(jewelImage);
+    jewel.scale = 0.2;
+    jewel.velocityX = -3;
+    jewel.lifetime = 550;
+    jewelGroup.add(jewel);
+  }  
+}
+
+//function to obstacles ->cocunut,pinecone,log,bri
+function spawnObstacles() {
+  if (frameCount % 240 === 0) {
+    var obstaces = createSprite(width,height-60,40,10);
+    var r = Math.round(random(1,4))
+    switch(r){
+      case 1 : obstaces.addImage(pinecone);break;
+      case 2 : obstaces.addImage(brick);break;
+      case 3 : obstaces.addImage(coconut);break;
+      case 4 : obstaces.addImage(log);break;   
+      default : obstaces.addImage(brick);break;
+    }
+    obstaces.scale = 0.2;
+    obstaces.velocityX = -3;
+    obstaces.lifetime = 550;
+    obstacesGroup.add(obstaces);
+  }  
+}
 
 
-
-
-
-
-
-//music ->bg, coolect coin, articats,banana,jump,hurt
-// write a code to increase coins if knight touches coins
-//var hp =100
-//if knight touches the spike pad hp should decrease hp-=10.
+//add code to make story screen rules screen play screen 
+//fix the score when knight touches coins
+//write code if knight touches obstacles, hp-=10,
+//if hp=0 -->gameover
+//if score>100 -> spawnArtifacts() every 200 frames
+//if score === 1000 you win
+//music ->bg, coolect coin, articats,banana,jump,hurt, wining music
